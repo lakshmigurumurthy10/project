@@ -9,17 +9,20 @@ import LoginPage from './pages/LoginPage';
 
 // Admin pages
 import AdminDashboard from './pages/admin/Dashboard';
-// import ManageClasses from './pages/admin/ManageClasses';
-// import ManageTeachers from './pages/admin/ManageTeachers';
-// import GenerateTimetable from './pages/admin/GenerateTimetable';
+import ManageTeachers from './pages/admin/ManageTeachers';
+import LabTimetable from './pages/admin/LabTimetable';
+import Syllabus from './pages/admin/Syllabus';
 
 // Teacher pages
-// import TeacherDashboard from './pages/teacher/Dashboard';
-// import TeacherViewSchedule from './pages/teacher/ViewSchedule';
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
 
 // Student pages
-// import StudentDashboard from './pages/student/Dashboard';
+import StudentDashboard from './pages/student/StudentDashboard';
 // import StudentViewTimetable from './pages/student/ViewTimetable';
+
+// Import missing pages (you'll need to create these)
+// import ManageClasses from './pages/admin/ManageClasses';
+// import GenerateTimetable from './pages/admin/GenerateTimetable';
 
 // Protected Route component
 const ProtectedRoute = ({ children, role }) => {
@@ -62,10 +65,26 @@ const App = () => {
           } 
         />
         <Route 
-          path="/admin/teachers" 
+          path="/admin/manage-teachers" 
           element={
             <ProtectedRoute role="admin">
-              {/* <ManageTeachers /> */}
+              <ManageTeachers />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/lab-timetable" 
+          element={
+            <ProtectedRoute role="admin">
+              <LabTimetable />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/syllabus" 
+          element={
+            <ProtectedRoute role="admin">
+              <Syllabus />
             </ProtectedRoute>
           } 
         />
@@ -83,36 +102,48 @@ const App = () => {
           path="/teacher/dashboard" 
           element={
             <ProtectedRoute role="teacher">
-              {/* <TeacherDashboard /> */}
+              <TeacherDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        {/* <Route 
+          path="/teacher/schedule" 
+          element={
+            <ProtectedRoute role="teacher">
+              <TeacherViewSchedule />
+            </ProtectedRoute>
+          } 
+        /> */}
+       
+        <Route 
+          path="/teacher/syllabus" 
+          element={
+            <ProtectedRoute role="teacher">
+              {/* Add Syllabus component when ready */}
+              <div>Syllabus Page - Coming Soon</div>
             </ProtectedRoute>
           } 
         />
         <Route 
-          path="/teacher/schedule" 
+          path="/teacher/profile" 
           element={
             <ProtectedRoute role="teacher">
-              {/* <TeacherViewSchedule /> */}
+              {/* Add Profile component when ready */}
+              <div>Profile Page - Coming Soon</div>
             </ProtectedRoute>
           } 
         />
         
         {/* Student routes */}
-        <Route 
+        /* <Route 
           path="/student/dashboard" 
           element={
             <ProtectedRoute role="student">
-              {/* <StudentDashboard /> */}
+              <StudentDashboard />
             </ProtectedRoute>
           } 
         />
-        <Route 
-          path="/student/timetable" 
-          element={
-            <ProtectedRoute role="student">
-              {/* <StudentViewTimetable /> */}
-            </ProtectedRoute>
-          } 
-        />
+        
         
         {/* Fallback route */}
         <Route path="*" element={<Navigate to="/" />} />

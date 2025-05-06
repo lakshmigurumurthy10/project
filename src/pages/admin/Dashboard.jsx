@@ -127,37 +127,38 @@ const AdminDashboard = () => {
   
   const stats = [
     { icon: <FaUsers />, value: '42', label: 'Teachers' },
-    { icon: <FaSchool />, value: '8', label: 'Departments' },
-    { icon: <FaBook />, value: '120', label: 'Courses' },
-    { icon: <FaCalendarAlt />, value: '35', label: 'Active Timetables' }
+    { icon: <FaCalendarAlt />, value: '35', label: 'Active Timetables' },
+    { icon: <FaBook />, value: '4 PDFs', label: 'Syllabus' }
   ];
+  
   
   const actions = [
     {
       icon: <FaUsers />,
       title: 'Manage Teachers',
-      description: 'Add, update, or remove teacher profiles and set their subject expertise.',
-      link: '/admin/teachers'
-    },
-    {
-      icon: <FaSchool />,
-      title: 'Manage Classes',
-      description: 'Configure departments, classes, sections, and assign subjects.',
-      link: '/admin/classes'
+      description: 'View, add, edit, or delete teacher profiles from the system.',
+      link: '/admin/manage-teachers'
     },
     {
       icon: <FaCalendarAlt />,
       title: 'Generate Timetable',
-      description: 'Create and publish timetables for different departments and classes.',
+      description: 'Create and publish class timetables. (More to be added)',
       link: '/admin/generate'
     },
     {
-      icon: <FaCog />,
-      title: 'System Settings',
-      description: 'Configure system preferences, academic years, and time slots.',
-      link: '/admin/settings'
+      icon: <FaChalkboardTeacher />,
+      title: 'View Lab Timetable',
+      description: 'Access the lab timetable with view and download options.',
+      link: '/admin/lab-timetable'
+    },
+    {
+      icon: <FaBook />,
+      title: 'Syllabus',
+      description: 'Download semester-wise syllabus PDFs.',
+      link: '/admin/syllabus'
     }
   ];
+  
 
   return (
     <DashboardContainer>
