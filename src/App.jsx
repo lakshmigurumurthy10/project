@@ -1,11 +1,12 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { AuthContext } from './context/AuthContext';
+import { useContext } from 'react';
+import AuthContext from './context/AuthContext';
 
 // Import pages
 import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
+import AuthPage from './pages/AuthPage';
 
 // Admin pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -26,10 +27,10 @@ import StudentDashboard from './pages/student/StudentDashboard';
 
 // Protected Route component
 const ProtectedRoute = ({ children, role }) => {
-  const { user, isAuthenticated } = React.useContext(AuthContext);
+  const { user, isAuthenticated } = useContext(AuthContext);
   
   if (!isAuthenticated) {
-    return <Navigate to={`/login/${role}`} />;
+    return <Navigate to={`/auth/${role}`} />;
   }
   
   if (user.role !== role) {
@@ -45,7 +46,7 @@ const App = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
-        <Route path="/login/:role" element={<LoginPage />} />
+        <Route path="/auth/:role" element={<AuthPage />} />
         
         {/* Admin routes */}
         <Route 
@@ -106,15 +107,6 @@ const App = () => {
             </ProtectedRoute>
           } 
         />
-        {/* <Route 
-          path="/teacher/schedule" 
-          element={
-            <ProtectedRoute role="teacher">
-              <TeacherViewSchedule />
-            </ProtectedRoute>
-          } 
-        /> */}
-       
         <Route 
           path="/teacher/syllabus" 
           element={
@@ -135,7 +127,7 @@ const App = () => {
         />
         
         {/* Student routes */}
-        /* <Route 
+        <Route 
           path="/student/dashboard" 
           element={
             <ProtectedRoute role="student">
@@ -143,7 +135,6 @@ const App = () => {
             </ProtectedRoute>
           } 
         />
-        
         
         {/* Fallback route */}
         <Route path="*" element={<Navigate to="/" />} />

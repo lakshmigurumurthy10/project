@@ -33,7 +33,7 @@ const NavLinks = styled.div`
   display: flex;
   align-items: center;
   gap: 2rem;
-
+  
   @media (max-width: 768px) {
     display: ${({ isOpen }) => (isOpen ? 'flex' : 'none')};
     flex-direction: column;
@@ -74,6 +74,8 @@ const NavButton = styled(motion.button)`
   padding: 0.5rem 1.5rem;
   border-radius: 50px;
   font-weight: 600;
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -91,6 +93,7 @@ const MobileMenuButton = styled.button`
   color: white;
   font-size: 1.5rem;
   display: none;
+  cursor: pointer;
   
   @media (max-width: 768px) {
     display: block;
@@ -101,16 +104,16 @@ const Navbar = () => {
   const { user, isAuthenticated, logout } = useContext(AuthContext);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-
+  
   const handleLogout = () => {
     logout();
     navigate('/');
   };
-
+  
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-
+  
   const getDashboardLink = () => {
     if (!user) return '/';
     
@@ -125,7 +128,7 @@ const Navbar = () => {
         return '/';
     }
   };
-
+  
   return (
     <NavContainer>
       <Logo to="/">RAM System</Logo>
@@ -142,7 +145,7 @@ const Navbar = () => {
         )}
         
         {isAuthenticated ? (
-          <NavButton 
+          <NavButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLogout}
@@ -153,8 +156,7 @@ const Navbar = () => {
           <NavButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            as={Link}
-            to="/login/student"
+            onClick={() => navigate('/auth/student')}
           >
             <FaUser /> Login
           </NavButton>
