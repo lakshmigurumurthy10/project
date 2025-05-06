@@ -140,12 +140,12 @@ const HomePage = () => {
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.4 }}
         >
           <Title
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5, type: 'spring', stiffness: 100 }}
+            transition={{ delay: 0.4, type: 'spring', stiffness: 100 }}
           >
             RAM - Resource Allocation Management
           </Title>
