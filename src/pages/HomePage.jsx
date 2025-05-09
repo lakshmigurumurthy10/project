@@ -14,7 +14,6 @@ const HomeContainer = styled.div`
   position: relative;
 `;
 
-// Modern Particle Background Component
 const ParticleBackground = () => {
   const canvasRef = React.useRef(null);
   
@@ -27,7 +26,6 @@ const ParticleBackground = () => {
     const particles = [];
     const particleCount = 100;
     
-    // Create particles
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,
@@ -52,15 +50,12 @@ const ParticleBackground = () => {
         ctx.fillStyle = particle.color;
         ctx.fill();
         
-        // Move particles
         particle.x += particle.speedX;
         particle.y += particle.speedY;
         
-        // Wrap around edges
         if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
         if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
         
-        // Connect particles with lines if they're close enough
         particles.forEach(otherParticle => {
           const dx = particle.x - otherParticle.x;
           const dy = particle.y - otherParticle.y;
@@ -183,7 +178,6 @@ const ScrollIndicator = styled(motion.div)`
   }
 `;
 
-// GlassMorphism styling for the login section
 const GlassMorphism = styled.div`
   position: relative;
   z-index: 2;
@@ -194,12 +188,12 @@ const GlassMorphism = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
-const LoginSection = styled(GlassMorphism)`
+const Section = styled(GlassMorphism)`
   margin: 2rem auto 4rem;
   padding: 3rem;
   max-width: 1200px;
-  min-height: 500px; /* Ensure the section has minimum height */
-  display: block; /* Always display this section */
+  min-height: 500px;
+  display: block;
   
   h2 {
     font-size: 2.5rem;
@@ -219,6 +213,9 @@ const LoginSection = styled(GlassMorphism)`
     }
   }
 `;
+
+const LoginSection = styled(Section)``;
+const FeaturesSection = styled(Section)``;
 
 const LoginOptionsContainer = styled(motion.div)`
   display: flex;
@@ -307,15 +304,59 @@ const FeatureHighlight = styled.span`
   color: #0a0a20;
 `;
 
-// Animation variants for staggered animations
+// Feature Highlights Component Styling
+const FeaturesGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+`;
+
+const FeatureCard = styled(motion.div)`
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  padding: 1.8rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+  
+  h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: #00d9f5;
+    font-weight: 600;
+  }
+  
+  p {
+    color: #bbb;
+    line-height: 1.6;
+  }
+  
+  &:hover {
+    border: 1px solid rgba(0, 217, 245, 0.3);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 217, 245, 0.1);
+  }
+`;
+
+const FeatureIntro = styled(motion.div)`
+  text-align: center;
+  margin-bottom: 2rem;
+  
+  p {
+    max-width: 800px;
+    margin: 0 auto;
+    color: #aaa;
+    line-height: 1.6;
+  }
+`;
+
+// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { 
     opacity: 1,
-    transition: { 
-      staggerChildren: 0.2,
-      delayChildren: 0.3,
-    }
+    transition: { staggerChildren: 0.2, delayChildren: 0.3 }
   }
 };
 
@@ -326,6 +367,84 @@ const itemVariants = {
     opacity: 1,
     transition: { type: 'spring', stiffness: 100 }
   }
+};
+
+// Feature Highlights Component with custom intersection observer
+const FeatureHighlights = () => {
+  const featureRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    if (featureRef.current) {
+      observer.observe(featureRef.current);
+    }
+    
+    return () => {
+      if (featureRef.current) {
+        observer.unobserve(featureRef.current);
+      }
+    };
+  }, []);
+  
+  const features = [
+    {
+      title: "Smart Scheduling",
+      description: "Automated algorithms create optimal timetables considering all constraints"
+    },
+    {
+      title: "Real-time Updates",
+      description: "Changes reflect instantly across all user interfaces"
+    },
+    {
+      title: "Conflict Detection",
+      description: "Automatically identifies and resolves scheduling conflicts"
+    },
+    {
+      title: "User-friendly",
+      description: "Intuitive interface designed for all technical levels"
+    }
+  ];
+  
+  return (
+    <FeaturesSection ref={featureRef}>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate={isVisible ? "visible" : "hidden"}
+      >
+        <FeatureIntro variants={itemVariants}>
+          <motion.h2 variants={itemVariants}>About RAM</motion.h2>
+          <motion.p variants={itemVariants}>
+            Welcome to RAM – Resource Allocation Management, a smart timetable generator for BMS College for Women. 
+            Our tool automates scheduling, simplifying the process for both teachers and students.
+          </motion.p>
+        </FeatureIntro>
+        
+        <FeaturesGrid>
+          {features.map((feature, index) => (
+            <FeatureCard
+              key={index}
+              variants={itemVariants}
+              whileHover={{ y: -5 }}
+            >
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
+            </FeatureCard>
+          ))}
+        </FeaturesGrid>
+      </motion.div>
+    </FeaturesSection>
+  );
 };
 
 const HomePage = () => {
@@ -342,15 +461,13 @@ const HomePage = () => {
   ];
 
   useEffect(() => {
-    // Show initial title animation - significantly reduced time
-    setTimeout(() => {
-      setShowContent(true);
-    }, 1000); // Reduced from 2500ms to 1000ms for faster loading
+    // Show initial title animation - reduced time for faster loading
+    setTimeout(() => setShowContent(true), 1000);
 
-    // Cycle through greetings - slightly reduced time
+    // Cycle through greetings
     const interval = setInterval(() => {
       setCurrentGreeting((prev) => (prev + 1) % greetings.length);
-    }, 1800); // Kept at 1800ms
+    }, 1800);
 
     return () => clearInterval(interval);
   }, []);
@@ -408,7 +525,6 @@ const HomePage = () => {
               With our intuitive interface, RAM transforms tedious planning into efficient, hassle-free timetable management!
             </Description>
 
-            {/* Adding the scroll indicator from the first file */}
             <ScrollIndicator 
               onClick={scrollToLogin}
               initial={{ opacity: 0 }}
@@ -422,7 +538,7 @@ const HomePage = () => {
         )}
       </HeroSection>
 
-      {/* Login section with always visible content */}
+      {/* Login section */}
       <LoginSection ref={loginSectionRef}>
         <motion.div
           variants={containerVariants}
@@ -436,16 +552,11 @@ const HomePage = () => {
               to="/auth/admin"
               $glow="rgba(0, 217, 245, 0.2)"
               variants={itemVariants}
-              whileHover={{ 
-                scale: 1.05,
-                transition: { duration: 0.3 }
-              }}
+              whileHover={{ scale: 1.05, transition: { duration: 0.3 } }}
               whileTap={{ scale: 0.98 }}
             >
               <FeatureHighlight>Full Access</FeatureHighlight>
-              <LoginIcon>
-                <FaUserCog />
-              </LoginIcon>
+              <LoginIcon><FaUserCog /></LoginIcon>
               <LoginTitle>Administrator</LoginTitle>
               <LoginDescription>
                 Master control over timetables, resources, and system settings
@@ -456,15 +567,10 @@ const HomePage = () => {
               to="/auth/teacher"
               $glow="rgba(0, 217, 245, 0.2)"
               variants={itemVariants}
-              whileHover={{ 
-                scale: 1.05,
-                transition: { duration: 0.3 }
-              }}
+              whileHover={{ scale: 1.05, transition: { duration: 0.3 } }}
               whileTap={{ scale: 0.98 }}
             >
-              <LoginIcon>
-                <FaChalkboardTeacher />
-              </LoginIcon>
+              <LoginIcon><FaChalkboardTeacher /></LoginIcon>
               <LoginTitle>Faculty</LoginTitle>
               <LoginDescription>
                 Access your teaching schedule and manage classroom resources
@@ -475,15 +581,10 @@ const HomePage = () => {
               to="/auth/student"
               $glow="rgba(0, 217, 245, 0.2)"
               variants={itemVariants}
-              whileHover={{ 
-                scale: 1.05,
-                transition: { duration: 0.3 }
-              }}
+              whileHover={{ scale: 1.05, transition: { duration: 0.3 } }}
               whileTap={{ scale: 0.98 }}
             >
-              <LoginIcon>
-                <FaUserGraduate />
-              </LoginIcon>
+              <LoginIcon><FaUserGraduate /></LoginIcon>
               <LoginTitle>Student</LoginTitle>
               <LoginDescription>
                 View your personalized class schedule and campus events
@@ -492,6 +593,9 @@ const HomePage = () => {
           </LoginOptionsContainer>
         </motion.div>
       </LoginSection>
+      
+      {/* Feature Highlights Section */}
+      <FeatureHighlights />
       
       <Footer />
     </HomeContainer>

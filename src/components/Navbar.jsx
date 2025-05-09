@@ -139,6 +139,7 @@ const Navbar = () => {
       
       <NavLinks isOpen={isMenuOpen}>
         <NavLink to="/">Home</NavLink>
+
         
         {isAuthenticated && (
           <NavLink to={getDashboardLink()}>Dashboard</NavLink>
