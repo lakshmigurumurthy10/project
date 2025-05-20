@@ -19,6 +19,7 @@ import TeacherDashboard from './pages/teacher/TeacherDashboard';
 
 // Student pages
 import StudentDashboard from './pages/student/StudentDashboard';
+import TimetableWizardModal from './components/timetable/TimetableWizard';
 // import StudentViewTimetable from './pages/student/ViewTimetable';
 
 // Import missing pages (you'll need to create these)
@@ -93,7 +94,7 @@ const App = () => {
           path="/admin/generate" 
           element={
             <ProtectedRoute role="admin">
-              {/* <GenerateTimetable /> */}
+              <TimetableWizardModal />
             </ProtectedRoute>
           } 
         />

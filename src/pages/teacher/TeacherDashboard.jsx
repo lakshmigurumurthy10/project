@@ -422,10 +422,7 @@ const TeacherDashboard = () => {
     return null;
   };
 
-  const stats = [
-    { icon: <FaCalendarAlt />, value: '15', label: 'Weekly Classes' },
-    { icon: <FaBook />, value: '4', label: 'Subjects' },
-  ];
+
 
   useEffect(() => {
     // Get current day name
@@ -542,24 +539,6 @@ const TeacherDashboard = () => {
             From here, you can view your timetable, access class resources, and manage your schedule.
           </WelcomeText>
         </WelcomeSection>
-        
-        <h2 style={{ marginBottom: '1.5rem', color: '#fff' }}>Overview</h2>
-        <StatsGrid>
-          {stats.map((stat, index) => (
-            <StatCard
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <StatIcon>{stat.icon}</StatIcon>
-              <StatContent>
-                <StatValue>{stat.value}</StatValue>
-                <StatLabel>{stat.label}</StatLabel>
-              </StatContent>
-            </StatCard>
-          ))}
-        </StatsGrid>
         
         <TodayClassesSection>
           <TimetableHeader>

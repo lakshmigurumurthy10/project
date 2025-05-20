@@ -126,8 +126,7 @@ const AdminDashboard = () => {
   const { user } = useContext(AuthContext);
   
   const stats = [
-    { icon: <FaUsers />, value: '42', label: 'Teachers' },
-    { icon: <FaCalendarAlt />, value: '35', label: 'Active Timetables' },
+    { icon: <FaUsers />, value: '20+', label: 'Teachers' },
     { icon: <FaBook />, value: '4 PDFs', label: 'Syllabus' }
   ];
   
@@ -142,7 +141,7 @@ const AdminDashboard = () => {
     {
       icon: <FaCalendarAlt />,
       title: 'Generate Timetable',
-      description: 'Create and publish class timetables. (More to be added)',
+      description: 'Create and publish class timetables.',
       link: '/admin/generate'
     },
     {

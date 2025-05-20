@@ -16,6 +16,117 @@ import AuthContext from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 
+// Modal styled components
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ModalContainer = styled(motion.div)`
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 10px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+`;
+
+const ModalTitle = styled.h2`
+  color: #fff;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  text-align: center;
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 1.5rem;
+`;
+
+const Label = styled.label`
+  display: block;
+  color: #fff;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1rem;
+  
+  &:focus {
+    outline: none;
+    border-color: #00d9f5;
+  }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1rem;
+  
+  &:focus {
+    outline: none;
+    border-color: #00d9f5;
+  }
+  
+  option {
+    background: #16213e;
+    color: #fff;
+  }
+`;
+
+const SubmitButton = styled(motion.button)`
+  width: 100%;
+  background: linear-gradient(90deg, #00f5a0, #00d9f5);
+  border: none;
+  border-radius: 5px;
+  padding: 0.75rem;
+  color: #1a1a2e;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+`;
+
+const ErrorMessage = styled.p`
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+`;
+
+const LoadingSpinner = styled.div`
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid #00d9f5;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
 const DashboardContainer = styled.div`
   min-height: 100vh;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -355,8 +466,33 @@ const StudentDashboard = () => {
   const [activeDay, setActiveDay] = useState('monday');
   const [currentDayName, setCurrentDayName] = useState('');
   const fullTimetableRef = useRef(null);
+  
+  // States for the modal
+  const [showModal, setShowModal] = useState(true);
+  const [year, setYear] = useState('');
+  const [section, setSection] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // State for the timetable data
+  const [timetableData, setTimetableData] = useState(null);
 
-  // Mock data for the student timetable
+  // Time slots for the full grid timetable
+  const timeSlots = [
+    '9:00-10:00', 
+    '10:00-11:00', 
+    '11:00-12:00', 
+    '12:00-1:00', 
+    '1:00-2:00', 
+    '2:00-3:00', 
+    '3:00-4:00', 
+    '4:00-5:00'
+  ];
+  
+  // Days for the full grid timetable
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  // Mock data for the student timetable (will be replaced by API data)
   const mockTimetable = {
     monday: [
       { time: '9:00 - 10:00', subject: 'Database Management', room: 'CS-201', teacher: 'Prof. Johnson' },
@@ -386,20 +522,49 @@ const StudentDashboard = () => {
     ],
   };
 
-  // Time slots for the full grid timetable
-  const timeSlots = [
-    '9:00-10:00', 
-    '10:00-11:00', 
-    '11:00-12:00', 
-    '12:00-1:00', 
-    '1:00-2:00', 
-    '2:00-3:00', 
-    '3:00-4:00', 
-    '4:00-5:00'
-  ];
-  
-  // Days for the full grid timetable
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  // Function to handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate inputs
+    if (!year || !section) {
+      setError('Please fill in all fields');
+      return;
+    }
+    
+    setError('');
+    setIsLoading(true);
+    
+    // Make API call to fetch timetable data
+    try {
+      const response = await fetch('http://localhost:5000/generate_timetable', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          year,
+          section,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch timetable data');
+      }
+      
+      const data = await response.json();
+      setTimetableData(data);
+      setShowModal(false);
+    } catch (error) {
+      console.error('Error fetching timetable data:', error);
+      setError('Failed to fetch timetable data. Please try again.');
+      // Use mock data if API fails
+      setTimetableData(mockTimetable);
+      setShowModal(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Map classes to time slots for the full grid timetable
   const getClassForTimeSlot = (day, timeSlot) => {
@@ -410,7 +575,9 @@ const StudentDashboard = () => {
       return { isLunch: true };
     }
     
-    for (const classItem of mockTimetable[dayLowerCase] || []) {
+    const timetableToUse = timetableData || mockTimetable;
+    
+    for (const classItem of timetableToUse[dayLowerCase] || []) {
       const classStartTime = classItem.time.split(' - ')[0];
       if (classStartTime === startTime.replace('-', ':')) {
         return { class: classItem };
@@ -422,7 +589,7 @@ const StudentDashboard = () => {
   const stats = [
     { icon: <FaCalendarAlt />, value: '18', label: 'Weekly Classes' },
     { icon: <FaBook />, value: '6', label: 'Subjects' },
-    { icon: <FaGraduationCap />, value: 'BCA 5th', label: 'Current Semester' },
+    { icon: <FaGraduationCap />, value: `${year || 'BCA'} ${section || '5th'}`, label: 'Current Semester' },
   ];
 
   useEffect(() => {
@@ -456,7 +623,9 @@ const StudentDashboard = () => {
       // Generate CSV content for the timetable
       let csvContent = 'Day,Time,Subject,Room,Teacher\n';
       
-      Object.entries(mockTimetable).forEach(([day, classes]) => {
+      const timetableToUse = timetableData || mockTimetable;
+      
+      Object.entries(timetableToUse).forEach(([day, classes]) => {
         classes.forEach(classItem => {
           csvContent += `${day},${classItem.time},"${classItem.subject}",${classItem.room},"${classItem.teacher}"\n`;
         });
@@ -502,7 +671,7 @@ const StudentDashboard = () => {
         <body>
           <button class="print-btn" onclick="window.print()">Print Timetable</button>
           <h1>Weekly Timetable - ${user?.name || 'Student'}</h1>
-          <p style="text-align: center;">BCA 5th Semester</p>
+          <p style="text-align: center;">${year || 'BCA'} ${section || '5th'} Semester</p>
           <table>
             <tr>
               <th></th>
@@ -595,11 +764,13 @@ const StudentDashboard = () => {
         <body>
           <button class="no-print" onclick="window.print();" style="padding: 10px; margin: 20px; cursor: pointer;">Print Timetable</button>
           <h1>Weekly Timetable - ${user?.name || 'Student'}</h1>
-          <p style="text-align: center;">BCA 5th Semester</p>
+          <p style="text-align: center;">${year || 'BCA'} ${section || '5th'} Semester</p>
       `;
       
+      const timetableToUse = timetableData || mockTimetable;
+      
       // Add timetable for each day
-      Object.entries(mockTimetable).forEach(([day, classes]) => {
+      Object.entries(timetableToUse).forEach(([day, classes]) => {
         htmlContent += `
           <div class="day-title">${day}</div>
           <table>
@@ -652,17 +823,71 @@ const StudentDashboard = () => {
 
   return (
     <DashboardContainer>
+      {showModal && (
+        <ModalOverlay>
+          <ModalContainer
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ModalTitle>Welcome to Your Dashboard</ModalTitle>
+            <form onSubmit={handleSubmit}>
+              <FormGroup>
+                <Label htmlFor="year">Enter Your Year</Label>
+                <Select 
+                  id="year" 
+                  value={year} 
+                  onChange={(e) => setYear(e.target.value)}
+                  required
+                >
+                  <option value="">Select Year</option>
+                  <option value="1st Year">1st Year</option>
+                  <option value="2nd Year">2nd Year</option>
+                  <option value="3rd Year">3rd Year</option>
+                  <option value="4th Year">4th Year</option>
+                </Select>
+              </FormGroup>
+              <FormGroup>
+                <Label htmlFor="section">Enter Your Section</Label>
+                <Select 
+                  id="section" 
+                  value={section} 
+                  onChange={(e) => setSection(e.target.value)}
+                  required
+                >
+                  <option value="">Select Section</option>
+                  <option value="A">Section A</option>
+                  <option value="B">Section B</option>
+                  <option value="C">Section C</option>
+                  <option value="D">Section D</option>
+                  <option value="E">Section E</option>
+                </Select>
+              </FormGroup>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+              <SubmitButton
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? <LoadingSpinner /> : 'Fetch Timetable'}
+              </SubmitButton>
+            </form>
+          </ModalContainer>
+        </ModalOverlay>
+      )}
+      
       <Navbar />
+      
       <DashboardContent>
         <WelcomeSection>
-          <WelcomeTitle>Welcome, {user?.name || 'Student'}</WelcomeTitle>
+          <WelcomeTitle>Welcome back, {user?.name || 'Student'}!</WelcomeTitle>
           <WelcomeText>
-            This is your student dashboard for the Resource Allocation Management system. 
-            From here, you can view your timetable, track assignments, and stay updated with the latest notifications.
+            Here's your timetable for the {year || 'current'} {section || ''} semester. 
+            Stay organized and don't miss any classes.
           </WelcomeText>
         </WelcomeSection>
-        
-        <h2 style={{ marginBottom: '1.5rem', color: '#fff' }}>Overview</h2>
+
         <StatsGrid>
           {stats.map((stat, index) => (
             <StatCard
@@ -679,49 +904,59 @@ const StudentDashboard = () => {
             </StatCard>
           ))}
         </StatsGrid>
-        
+
         <TodayClassesSection>
           <TimetableHeader>
             <TimetableTitle>Today's Classes</TimetableTitle>
           </TimetableHeader>
-          
-          {mockTimetable[currentDayName] && mockTimetable[currentDayName].length > 0 ? (
-            <ClassesGrid>
-              {mockTimetable[currentDayName].map((classItem, index) => (
-                <ClassCard key={index}>
-                  <ClassTime>
-                    <FaClock /> {classItem.time}
-                  </ClassTime>
-                  <ClassSubject>{classItem.subject}</ClassSubject>
-                  <ClassDetails>
-                    <FaSchool /> {classItem.room}
-                  </ClassDetails>
-                  <ClassDetails>
-                    <FaUserCircle /> {classItem.teacher}
-                  </ClassDetails>
-                </ClassCard>
-              ))}
-            </ClassesGrid>
-          ) : (
-            <p style={{ color: '#aaa' }}>No classes scheduled for today.</p>
-          )}
+
+          <ClassesGrid>
+            {(timetableData || mockTimetable)[currentDayName]?.map((classItem, index) => (
+              <ClassCard key={index}>
+                <ClassTime>
+                  <FaClock />
+                  {classItem.time}
+                </ClassTime>
+                <ClassSubject>{classItem.subject}</ClassSubject>
+                <ClassDetails>
+                  <FaSchool />
+                  {classItem.room}
+                </ClassDetails>
+                <ClassDetails>
+                  <FaUserCircle />
+                  {classItem.teacher}
+                </ClassDetails>
+              </ClassCard>
+            )) || (
+              <p style={{ color: '#aaa' }}>No classes scheduled for today</p>
+            )}
+          </ClassesGrid>
         </TodayClassesSection>
-        
+
         <TimetableSection>
           <TimetableHeader>
             <TimetableTitle>Weekly Timetable</TimetableTitle>
-            <ActionButton 
-              onClick={handleDownloadTimetable}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FaDownload /> Download Timetable
-            </ActionButton>
+            <ButtonsContainer>
+              <ActionButton
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleDownloadTimetable}
+              >
+                <FaDownload /> Download
+              </ActionButton>
+              <ActionButton
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handlePrintTimetable}
+              >
+                <FaPrint /> Print
+              </ActionButton>
+            </ButtonsContainer>
           </TimetableHeader>
-          
+
           <TabContainer>
-            {Object.keys(mockTimetable).map((day) => (
-              <Tab 
+            {Object.keys(timetableData || mockTimetable).map((day) => (
+              <Tab
                 key={day}
                 active={activeDay === day}
                 onClick={() => setActiveDay(day)}
@@ -730,7 +965,7 @@ const StudentDashboard = () => {
               </Tab>
             ))}
           </TabContainer>
-          
+
           <TimetableGrid>
             <TimetableRow>
               <TimetableHeaderCell>Time</TimetableHeaderCell>
@@ -738,44 +973,36 @@ const StudentDashboard = () => {
               <TimetableHeaderCell>Room</TimetableHeaderCell>
               <TimetableHeaderCell>Teacher</TimetableHeaderCell>
             </TimetableRow>
-            
-            {mockTimetable[activeDay] && mockTimetable[activeDay].map((classItem, index) => (
-              <TimetableRow key={index}>
-                <TimetableCell data-label="Time">{classItem.time}</TimetableCell>
-                <TimetableCell data-label="Subject">{classItem.subject}</TimetableCell>
-                <TimetableCell data-label="Room">{classItem.room}</TimetableCell>
-                <TimetableCell data-label="Teacher">{classItem.teacher}</TimetableCell>
+
+            {(timetableData || mockTimetable)[activeDay]?.length > 0 ? (
+              (timetableData || mockTimetable)[activeDay].map((classItem, index) => (
+                <TimetableRow key={index}>
+                  <TimetableCell data-label="Time">{classItem.time}</TimetableCell>
+                  <TimetableCell data-label="Subject">{classItem.subject}</TimetableCell>
+                  <TimetableCell data-label="Room">{classItem.room}</TimetableCell>
+                  <TimetableCell data-label="Teacher">{classItem.teacher}</TimetableCell>
+                </TimetableRow>
+              ))
+            ) : (
+              <TimetableRow>
+                <TimetableCell colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
+                  No classes scheduled for this day
+                </TimetableCell>
               </TimetableRow>
-            ))}
+            )}
           </TimetableGrid>
         </TimetableSection>
 
         <FullTimetableSection>
           <TimetableHeader>
-            <TimetableTitle>Complete Weekly Schedule</TimetableTitle>
-            <ButtonsContainer>
-              <ActionButton 
-                onClick={handlePrintTimetable}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FaPrint /> Print Schedule
-              </ActionButton>
-              <ActionButton 
-                onClick={handleDownloadTimetable}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FaDownload /> Download Schedule
-              </ActionButton>
-            </ButtonsContainer>
+            <TimetableTitle>Full Week View</TimetableTitle>
           </TimetableHeader>
           
           <FullTimetableContainer ref={fullTimetableRef}>
             <FullTimetableTable>
               <thead>
                 <tr>
-                  <FullTimetableTh></FullTimetableTh>
+                  <FullTimetableTh>Time / Day</FullTimetableTh>
                   {timeSlots.map((slot, index) => (
                     <FullTimetableTh key={index}>{slot}</FullTimetableTh>
                   ))}
@@ -785,15 +1012,15 @@ const StudentDashboard = () => {
                 {days.map((day, dayIndex) => (
                   <tr key={dayIndex}>
                     <FullTimetableTd className="day-header">{day}</FullTimetableTd>
-                    {timeSlots.map((timeSlot, slotIndex) => {
+                    {timeSlots.map((timeSlot, timeIndex) => {
                       const classData = getClassForTimeSlot(day, timeSlot);
                       
                       if (classData?.isLunch) {
-                        return <FullTimetableTd key={slotIndex} className="lunch">LUNCH</FullTimetableTd>;
+                        return <FullTimetableTd key={timeIndex} className="lunch">LUNCH BREAK</FullTimetableTd>;
                       } else if (classData?.class) {
                         const { subject, room, teacher } = classData.class;
                         return (
-                          <FullTimetableTd key={slotIndex}>
+                          <FullTimetableTd key={timeIndex}>
                             <ClassBlock>
                               {subject}
                               <ClassInfo>{room} | {teacher}</ClassInfo>
@@ -801,7 +1028,7 @@ const StudentDashboard = () => {
                           </FullTimetableTd>
                         );
                       } else {
-                        return <FullTimetableTd key={slotIndex}></FullTimetableTd>;
+                        return <FullTimetableTd key={timeIndex}></FullTimetableTd>;
                       }
                     })}
                   </tr>
@@ -811,6 +1038,7 @@ const StudentDashboard = () => {
           </FullTimetableContainer>
         </FullTimetableSection>
       </DashboardContent>
+      
       <Footer />
     </DashboardContainer>
   );
