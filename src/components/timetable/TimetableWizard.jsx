@@ -1,7 +1,84 @@
 import React, { useState } from 'react';
+import styled from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
 import GeneralTimetableForm from './GeneralTimetableForm.jsx';
 
+const WizardContainer = styled.div`
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  min-height: 100vh;
+  padding: 4rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const StepBox = styled(motion.div)`
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  padding: 2rem;
+  border-radius: 16px;
+  max-width: 900px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+`;
+
+const Button = styled.button`
+  background-color: #00d9f5;
+  color: #000;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  margin-top: 1rem;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+
+  &:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+  }
+`;
+
+const StyledTable = styled.table`
+  width: 100%;
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+  text-align: center;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  th {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #00d9f5;
+  }
+
+  td {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  tr:nth-child(even) td {
+    background-color: rgba(255, 255, 255, 0.07);
+  }
+`;
+
 export default function LabAndFinalTimetableWizard() {
+  const [step, setStep] = useState(0);
   const [yearsSections, setYearsSections] = useState({});
   const [labsPerSections, setLabsPerSections] = useState({});
   const [subjectsPerYear, setSubjectsPerYear] = useState({});
@@ -30,7 +107,7 @@ export default function LabAndFinalTimetableWizard() {
     const payload = {
       years_sections: yearsSections,
       labs_per_sections: labsPerSections,
-      subjects_per_year: subjectsPerYear,
+      subjects_per_year: subjectsPerYear
     };
 
     setLoading(true);
@@ -38,7 +115,7 @@ export default function LabAndFinalTimetableWizard() {
       const res = await fetch('http://localhost:5000/generate_lab_timetable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
 
       const contentType = res.headers.get('content-type');
@@ -48,6 +125,7 @@ export default function LabAndFinalTimetableWizard() {
 
       const data = await res.json();
       setLabSummary(data);
+      setStep(2); // ✅ Auto move to next step after receiving response
     } catch (err) {
       alert('Lab generation failed: ' + err.message);
     } finally {
@@ -56,74 +134,112 @@ export default function LabAndFinalTimetableWizard() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h2 className="text-xl font-bold mb-4">Step 1: Lab Timetable Input</h2>
+    <WizardContainer>
+      <AnimatePresence mode="wait">
+        {step === 0 && (
+          <StepBox
+            key="step1"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.4 }}
+          >
+            <h2 className="text-2xl font-bold mb-4">Step 1: Year-wise Inputs</h2>
+            {[1, 2, 3].map(year => (
+              <div key={year}>
+                <label>Year {year} Sections (comma-separated)</label>
+                <Input onBlur={e => handleSectionsInput(year, e.target.value)} />
+                <label>Subjects for Year {year}</label>
+                <Input onBlur={e => handleSubjectsInput(year, e.target.value)} />
+              </div>
+            ))}
+            <Button onClick={() => setStep(1)}>Next</Button>
+          </StepBox>
+        )}
 
-      {[1, 2, 3].map(year => (
-        <div key={year} className="mb-4">
-          <label className="block font-semibold">Year {year} Sections (comma-separated)</label>
-          <input className="border p-2 w-full" onBlur={e => handleSectionsInput(year, e.target.value)} />
+        {step === 1 && (
+          <StepBox
+            key="step2"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.4 }}
+          >
+            <h2 className="text-2xl font-bold mb-4">Step 2: Labs Per Section</h2>
+            {Object.entries(yearsSections).map(([year, sections]) => (
+              <div key={year}>
+                <h4 className="font-semibold">Year {year}</h4>
+                {sections.map(section => (
+                  <div key={section} className="mb-2">
+                    <label>{section}</label>
+                    <Input
+                      type="number"
+                      defaultValue={4}
+                      onChange={e => handleLabCountChange(section, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+            <Button onClick={generateLabTimetable} disabled={loading}>
+              {loading ? 'Generating...' : 'Generate Lab Timetable'}
+            </Button>
+          </StepBox>
+        )}
 
-          <label className="block font-semibold mt-2">Subjects for Year {year}</label>
-          <input className="border p-2 w-full" onBlur={e => handleSubjectsInput(year, e.target.value)} />
-        </div>
-      ))}
-
-      {Object.entries(yearsSections).map(([year, sections]) => (
-        <div key={year} className="mt-4">
-          <h4 className="font-bold">Labs Per Section (Year {year})</h4>
-          {sections.map(section => (
-            <div key={section} className="flex items-center space-x-2">
-              <label>{section}</label>
-              <input
-                type="number"
-                defaultValue={4}
-                className="border p-1"
-                onChange={e => handleLabCountChange(section, e.target.value)}
-              />
-            </div>
-          ))}
-        </div>
-      ))}
-
-      <button
-        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-        onClick={generateLabTimetable}
-        disabled={loading}
-      >
-        {loading ? 'Generating...' : 'Generate Lab Timetable'}
-      </button>
-
-      {labSummary.length > 0 && (
-        <>
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold">Lab Timetable Summary</h3>
-            <table className="w-full border mt-2 text-sm">
+        {step === 2 && (
+          <StepBox
+            key="step3"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.4 }}
+          >
+            <h2 className="text-2xl font-bold mb-4">Step 3: Lab Timetable Summary</h2>
+            <StyledTable>
               <thead>
                 <tr>
-                  <th>Year</th><th>Day</th><th>Time</th><th>Section</th><th>Subject</th><th>Batch</th>
+                  <th>Year</th>
+                  <th>Day</th>
+                  <th>Time</th>
+                  <th>Section</th>
+                  <th>Subject</th>
+                  <th>Batch</th>
                 </tr>
               </thead>
               <tbody>
                 {labSummary.map((item, i) => (
-                  <tr key={i} className="text-center">
-                    <td>{item.Year}</td><td>{item.Day}</td><td>{item.Time}</td>
-                    <td>{item.Section}</td><td>{item.Subject}</td><td>{item.Batch}</td>
+                  <tr key={i}>
+                    <td>{item.Year}</td>
+                    <td>{item.Day}</td>
+                    <td>{item.Time}</td>
+                    <td>{item.Section}</td>
+                    <td>{item.Subject}</td>
+                    <td>{item.Batch}</td>
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+            </StyledTable>
+            <Button onClick={() => setStep(3)} className="mt-6">Next</Button>
+          </StepBox>
+        )}
 
-          <div className="mt-10 border-t pt-6">
-            <h2 className="text-xl font-bold mb-4">Step 2: Final Timetable Generation</h2>
+        {step === 3 && (
+          <StepBox
+            key="step4"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.4 }}
+          >
+            <h2 className="text-2xl font-bold mb-4">Step 4: Final Timetable</h2>
             <GeneralTimetableForm
               yearsSections={yearsSections}
               labSummary={labSummary}
             />
-          </div>
-        </>
-      )}
-    </div>
+          </StepBox>
+        )}
+      </AnimatePresence>
+    </WizardContainer>
   );
 }

@@ -164,7 +164,7 @@ const AdminDashboard = () => {
       <Navbar />
       <DashboardContent>
         <WelcomeSection>
-          <WelcomeTitle>Welcome, {user?.name || 'Admin'}</WelcomeTitle>
+          <WelcomeTitle>Welcome, {user?.full_name || 'Admin'}</WelcomeTitle>
           <WelcomeText>
             This is your administrative dashboard for the Resource Allocation Management system. 
             From here, you can manage teachers, classes, and generate timetables.
