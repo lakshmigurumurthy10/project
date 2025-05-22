@@ -1,9 +1,8 @@
-// Simplified LabTimetable.jsx — Mock data + view/download
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import { FaArrowLeft, FaEye, FaDownload } from 'react-icons/fa';
+import { FaEye, FaDownload } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 const Container = styled.div`
@@ -93,40 +92,45 @@ const LabTimetable = () => {
   const [error, setError] = useState(null);
   const [fileUrl, setFileUrl] = useState('');
 
-  useEffect(() => {
-    const fetchTimetable = async () => {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const mockData = {
-          entries: [
-            { year: 1, section: 'b', day: 'Monday', time: '11:00 - 14:00', batch: 'Batch 1', lab: 'Lab 1', subject: 'Java' },
-            { year: 1, section: 'b', day: 'Monday', time: '11:00 - 14:00', batch: 'Batch 2', lab: 'Lab 2', subject: 'DBMS' },
-            { year: 1, section: 'c', day: 'Monday', time: '14:00 - 17:00', batch: 'Batch 1', lab: 'Lab 1', subject: 'Java' },
-            { year: 1, section: 'c', day: 'Monday', time: '14:00 - 17:00', batch: 'Batch 2', lab: 'Lab 2', subject: 'DBMS' },
-            { year: 1, section: 'a', day: 'Monday', time: '08:00 - 11:00', batch: 'Batch 1', lab: 'Lab 1', subject: 'Java' },
-            { year: 1, section: 'a', day: 'Monday', time: '08:00 - 11:00', batch: 'Batch 2', lab: 'Lab 2', subject: 'DBMS' },
-            { year: 1, section: 'a', day: 'Tuesday', time: '11:00 - 14:00', batch: 'Batch 1', lab: 'Lab 1', subject: 'DBMS' },
-            { year: 1, section: 'a', day: 'Tuesday', time: '11:00 - 14:00', batch: 'Batch 2', lab: 'Lab 2', subject: 'Java' },
-            { year: 1, section: 'b', day: 'Tuesday', time: '14:00 - 17:00', batch: 'Batch 1', lab: 'Lab 1', subject: 'DBMS' },
-            { year: 1, section: 'b', day: 'Tuesday', time: '14:00 - 17:00', batch: 'Batch 2', lab: 'Lab 2', subject: 'Java' },
-            { year: 1, section: 'd', day: 'Tuesday', time: '08:00 - 11:00', batch: 'Batch 1', lab: 'Lab 1', subject: 'Java' },
-            { year: 1, section: 'd', day: 'Tuesday', time: '08:00 - 11:00', batch: 'Batch 2', lab: 'Lab 2', subject: 'DBMS' },
-            { year: 1, section: 'd', day: 'Wednesday', time: '11:00 - 14:00', batch: 'Batch 1', lab: 'Lab 1', subject: 'DBMS' }
-          ],
-          fileUrl: '/sample/lab-timetable.pdf'
-        };
-
-        setLabData(mockData.entries);
-        setFileUrl(mockData.fileUrl);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to fetch lab timetable.');
+ useEffect(() => {
+  const fetchLabData = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/generate_lab_timetable');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
       }
-    };
 
-    fetchTimetable();
-  }, []);
+      const data = await response.json();
+      console.log(data);
+
+      // ✅ Update this line to match API structure
+      if (data.timetable && Array.isArray(data.timetable)) {
+        // Normalize keys to lowercase for consistency if needed
+        const formattedData = data.timetable.map(item => ({
+          year: item.Year,
+          section: item.Section,
+          day: item.Day,
+          time: item.Time,
+          batch: item.Batch,
+          subject: item.Subject,
+          lab: item.Batch.match(/\(([^,]+),/)[1] || "Lab N/A"  // Extract lab from batch string
+        }));
+        setLabData(formattedData);
+      } else {
+        setError('Invalid data format received from API.');
+      }
+
+      if (data.pdf_url) {
+        setFileUrl(data.pdf_url);
+      }
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setError('Failed to fetch lab timetable from the server.');
+    }
+  };
+
+  fetchLabData();
+}, []);
 
   return (
     <Container>

@@ -20,11 +20,8 @@ import TeacherDashboard from './pages/teacher/TeacherDashboard';
 // Student pages
 import StudentDashboard from './pages/student/StudentDashboard';
 import TimetableWizardModal from './components/timetable/TimetableWizard';
-// import StudentViewTimetable from './pages/student/ViewTimetable';
 
-// Import missing pages (you'll need to create these)
-// import ManageClasses from './pages/admin/ManageClasses';
-// import GenerateTimetable from './pages/admin/GenerateTimetable';
+// import GenerateTimetable from './pages/admin/GenerateTimetable'; 
 
 // Protected Route component
 const ProtectedRoute = ({ children, role }) => {

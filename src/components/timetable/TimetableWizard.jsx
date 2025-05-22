@@ -232,7 +232,7 @@ export default function LabAndFinalTimetableWizard() {
             exit={{ opacity: 0, y: -50 }}
             transition={{ duration: 0.4 }}
           >
-            <h2 className="text-2xl font-bold mb-4">Step 4: Final Timetable</h2>
+            <h2 className="text-2xl font-bold mb-4">Step 4: Final Timetable Inputs</h2>
             <GeneralTimetableForm
               yearsSections={yearsSections}
               labSummary={labSummary}

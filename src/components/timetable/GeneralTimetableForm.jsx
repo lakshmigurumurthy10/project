@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
+import html2canvas from 'html2canvas';
 
 const Input = styled.input`
   width: 100%;
@@ -100,6 +101,7 @@ export default function GeneralTimetableForm({ yearsSections, labSummary }) {
   const [finalOutput, setFinalOutput] = useState(null);
   const [previewPayload, setPreviewPayload] = useState(null);
   const [loading, setLoading] = useState(false);
+  const fullTimetableRef = useRef(null);
 
   const handleGenerateTimetable = () => {
     const num_subjects = {};
@@ -170,6 +172,55 @@ export default function GeneralTimetableForm({ yearsSections, labSummary }) {
       alert('Error generating timetable: ' + err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadTimetable = async () => {
+    if (fullTimetableRef.current) {
+      try {
+        const canvas = await html2canvas(fullTimetableRef.current, {
+          backgroundColor: '#16213e',
+          scale: 2,
+        });
+        const link = document.createElement('a');
+        link.download = 'timetable.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (error) {
+        console.error('Error generating timetable image:', error);
+        alert('Failed to download timetable as image');
+      }
+    }
+  };
+
+  const handlePrintTimetable = () => {
+    if (fullTimetableRef.current) {
+      const printWindow = window.open('', '_blank');
+      const styles = `
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #fff; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+          th { background-color: #f2f2f2; }
+          h1 { text-align: center; margin-bottom: 20px; }
+          .print-btn { display: block; margin: 20px auto; padding: 10px 20px; cursor: pointer; }
+          @media print { .print-btn { display: none; } }
+        </style>
+      `;
+      const content = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Print Timetable</title>${styles}</head>
+        <body>
+          <button class="print-btn" onclick="window.print()">Print Timetable</button>
+          <h1>Weekly Timetable</h1>
+          ${fullTimetableRef.current.innerHTML}
+        </body>
+        </html>
+      `;
+      printWindow.document.open();
+      printWindow.document.write(content);
+      printWindow.document.close();
     }
   };
 
@@ -315,54 +366,61 @@ export default function GeneralTimetableForm({ yearsSections, labSummary }) {
       )}
 
       {finalOutput && (
-  <PreviewBox>
-    <h3 className="text-lg font-bold text-blue-400 mb-2">Final Timetable Output</h3>
+        <PreviewBox>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-blue-400">Final Timetable Output</h3>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <Button onClick={handleDownloadTimetable}>Download PNG</Button>
+              <Button onClick={handlePrintTimetable}>Print</Button>
+            </div>
+          </div>
 
-    {Array.isArray(finalOutput?.student_timetable) ? (
-      finalOutput.student_timetable.map((sectionData, index) => (
-        <div key={index} className="mb-10">
-          <h4 className="text-xl font-semibold mb-2 text-teal-300">
-            Year {sectionData.year} – Section {sectionData.section}
-          </h4>
+          <div ref={fullTimetableRef}>
+            {Array.isArray(finalOutput?.student_timetable) ? (
+              finalOutput.student_timetable.map((sectionData, index) => (
+                <div key={index} className="mb-10">
+                  <h4 className="text-xl font-semibold mb-2 text-teal-300">
+                    Year {sectionData.year} – Section {sectionData.section}
+                  </h4>
 
-          <StyledTable>
-            <thead>
-              <tr>
-                <th>Day</th>
-                {[
-                  "8:00-9:00", "9:00-10:00", "10:00-11:00", "11:00-12:00",
-                  "12:00-13:00", "13:00-14:00", "14:00-15:00",
-                  "15:00-16:00", "16:00-17:00"
-                ].map((slot, i) => (
-                  <th key={i}>{slot}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sectionData.table_data.map((dayData, dayIdx) => (
-                <tr key={dayIdx}>
-                  <td><strong>{dayData.Day}</strong></td>
-                  {[
-                    "8:00-9:00", "9:00-10:00", "10:00-11:00", "11:00-12:00",
-                    "12:00-13:00", "13:00-14:00", "14:00-15:00",
-                    "15:00-16:00", "16:00-17:00"
-                  ].map((slot, slotIdx) => (
-                    <td key={slotIdx}>
-                      {dayData[slot] || "--"}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </StyledTable>
-        </div>
-      ))
-    ) : (
-      <pre>{JSON.stringify(finalOutput, null, 2)}</pre>
-    )}
-  </PreviewBox>
-)}
-
+                  <StyledTable>
+                    <thead>
+                      <tr>
+                        <th>Day</th>
+                        {[
+                          "8:00-9:00", "9:00-10:00", "10:00-11:00", "11:00-12:00",
+                          "12:00-13:00", "13:00-14:00", "14:00-15:00",
+                          "15:00-16:00", "16:00-17:00"
+                        ].map((slot, i) => (
+                          <th key={i}>{slot}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sectionData.table_data.map((dayData, dayIdx) => (
+                        <tr key={dayIdx}>
+                          <td><strong>{dayData.Day}</strong></td>
+                          {[
+                            "8:00-9:00", "9:00-10:00", "10:00-11:00", "11:00-12:00",
+                            "12:00-13:00", "13:00-14:00", "14:00-15:00",
+                            "15:00-16:00", "16:00-17:00"
+                          ].map((slot, slotIdx) => (
+                            <td key={slotIdx}>
+                              {dayData[slot] || "--"}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </StyledTable>
+                </div>
+              ))
+            ) : (
+              <pre>{JSON.stringify(finalOutput, null, 2)}</pre>
+            )}
+          </div>
+        </PreviewBox>
+      )}
     </Container>
   );
 }

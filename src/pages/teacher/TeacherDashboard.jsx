@@ -227,7 +227,7 @@ const TeacherDashboard = () => {
             {final.table_data.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 {Object.values(row).map((cell, cellIndex) => (
-                  <td key={cellIndex} style={{ padding: '10px', border: '1px solid #ccc', textAlign: 'center' }}>
+                  <td key={cellIndex} style={{ padding: '10px', border: '1px solid #ccc', textAlign: 'center' ,color: '#1a1a2e'}}>
                     {cell}
                   </td>
                 ))}
